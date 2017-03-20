@@ -12,7 +12,8 @@
   ],
   "require": {
     "zumba/json-serializer": "^2.1",
-    "jeremeamia/superclosure": "^2.3"
+    "jeremeamia/superclosure": "^2.3",
+    "php": ">=7.0"
   },
   "require-dev": {
     "phpunit/phpunit": "^6.0"
