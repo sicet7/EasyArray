@@ -1,0 +1,30 @@
+{
+  "name": "sicet7/easyarray",
+  "description": "A array wrapper class that makes if easier to use arrays and makes is fully serializable even with closures in the array.",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "version": "0.1",
+  "authors": [
+    {
+      "name": "Martin René Sørensen",
+      "email": "sicet7@hotmail.com"
+    }
+  ],
+  "require": {
+    "zumba/json-serializer": "^2.1",
+    "jeremeamia/superclosure": "^2.3"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^6.0"
+  },
+  "autoload":{
+    "psr-4":{
+      "Sicet7\\EasyArray\\": "src/"
+    }
+  },
+  "autoload-dev":{
+    "psr-4":{
+      "Sicet7\\EasyArray\\Tests\\": "tests/"
+    }
+  }
+}
