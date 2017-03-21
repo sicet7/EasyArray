@@ -16,7 +16,8 @@
     "php": ">=7.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "^6.0"
+    "phpunit/phpunit": "^6.0",
+    "sicet7/debug": "^1.0"
   },
   "autoload":{
     "psr-4":{
@@ -25,7 +26,7 @@
   },
   "autoload-dev":{
     "psr-4":{
-      "Sicet7\\EasyArray\\Tests\\": "tests/"
+      "Sicet7\\Tests\\EasyArray\\": "tests/"
     }
   }
 }
