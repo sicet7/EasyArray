@@ -88,3 +88,4 @@ composer.phar
 composer.lock
 
 _config.yml
+phpunit
