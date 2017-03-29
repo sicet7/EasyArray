@@ -272,11 +272,13 @@ class EasyArray implements IEasyArray{
         $default = $this->_executeEvents;
         $this->_executeEvents = FALSE;
 
-        if($this->get($offset) instanceof IEasyArray){
-            $tmpArrayHolder = $this->get($offset)->asArray();
-            $returnValue = ($value == array_pop($tmpArrayHolder));
+        $obj = $this->get($offset);
+
+        if($obj instanceof IEasyArray){
+            $tmpArrayHolder = $obj->asArray();
+            $returnValue = ($value === array_pop($tmpArrayHolder));
         }else{
-            $returnValue = ($this->get($offset) == $value);
+            $returnValue = ($obj === $value);
         }
 
         $this->_executeEvents = $default;
@@ -290,8 +292,11 @@ class EasyArray implements IEasyArray{
 
     public function merge(array $array, bool $overwrite = TRUE){
 
-        if(!$this->_change)
+        if($overwrite && !$this->_change)
             throw new \BadMethodCallException("Data change has been disabled");
+
+        if(!$overwrite && !$this->_append)
+            throw new \BadMethodCallException("Data append has been disabled");
 
         $values = $this->_recursiveValueUnpacker($array);
 
@@ -315,18 +320,25 @@ class EasyArray implements IEasyArray{
 
         $returnValue = FALSE;
         $type = gettype($value);
+        $obj = $this->get($offset);
+
+        if(($type !== 'array' && $type !== 'object') && ($type !== gettype($obj))) return false;
 
         switch ($type){
-
+            default:
+                if($obj !== $value)
+                    break;
+                $returnValue = TRUE;
+            break;
             case 'array':
 
-                if(!is_object($this->get($offset)))
+                if(!is_object($obj))
                     break;
 
-                if(!is_subclass_of($this->get($offset),IEasyArray::class))
+                if(!is_subclass_of($obj,IEasyArray::class))
                     break;
 
-                $match = $this->get($offset)->asArray();
+                $match = $obj->asArray();
 
                 if(count($match) !== count($value))
                     break;
@@ -343,10 +355,10 @@ class EasyArray implements IEasyArray{
             break;
             case 'object':
 
-                 if(!is_object($this->get($offset)))
+                 if(!is_object($obj))
                      break;
 
-                 if(get_class($this->get($offset)) != get_class($value))
+                 if(get_class($obj) !== get_class($value))
                      break;
 
                  $nameAsKey = function(array $value,$obj = NULL){
@@ -363,13 +375,13 @@ class EasyArray implements IEasyArray{
                      return $ar;
                  };
 
-                 $match = (new \ReflectionObject($this->get($offset)));
-                 $reflectValue = (new \ReflectionObject($value));
+                 $match = new \ReflectionObject($obj);
+                 $reflectValue = new \ReflectionObject($value);
 
                  if($this->_ksort($match->getConstants()) !== $this->_ksort($reflectValue->getConstants()))
                      break;
 
-                 if($this->_ksort($nameAsKey($match->getProperties(),$this->get($offset))) !== $this->_ksort($nameAsKey($reflectValue->getProperties(),$value)))
+                 if($this->_ksort($nameAsKey($match->getProperties(),$obj)) !== $this->_ksort($nameAsKey($reflectValue->getProperties(),$value)))
                      break;
 
                  if($this->_ksort($nameAsKey($match->getMethods())) !== $this->_ksort($nameAsKey($reflectValue->getMethods())))
@@ -377,11 +389,6 @@ class EasyArray implements IEasyArray{
 
                  $returnValue = TRUE;
 
-            break;
-            default:
-                if($this->get($offset) != $value)
-                    break;
-                $returnValue = TRUE;
             break;
         }
 
@@ -398,7 +405,8 @@ class EasyArray implements IEasyArray{
 
         $default = $this->_executeEvents;
         $this->_executeEvents = FALSE;
-        $returnValue = count(($this->get($offset) instanceof IEasyArray) ? $this->get($offset)->asArray() : $this->get($offset));
+        $obj = $this->get($offset);
+        $returnValue = count(($obj instanceof IEasyArray) ? $obj->asArray() : $obj);
         $this->_executeEvents = $default;
         return $returnValue;
 
@@ -416,6 +424,8 @@ class EasyArray implements IEasyArray{
 
     #region Protected Methods
 
+    //TODO : optimize with reference instead
+
     protected function _recursiveValueUnpacker(array $array):array{
 
         $a = [];
@@ -424,19 +434,19 @@ class EasyArray implements IEasyArray{
 
             if(strpos($k,'.') !== FALSE){
                 $keys = explode('.',$k);
+                $keyCount = count($keys);
 
                 foreach($keys as $index => $keyValue){
-
-                    $count = $index+1;
 
                     if(!isset($ref))
                         $ref = &$a;
 
-                    if(count($keys) == $count){
+                    if($keyCount === $index+1){
                         $ref[$keyValue] = (is_array($v) ? $this->_recursiveValueUnpacker($v) : $v);
                         unset($ref);
                     }else{
-                        if(!$this->_check($ref,$keyValue) || ($this->_check($ref,$keyValue) && !is_array($ref[$keyValue])))
+                        $check = $this->_check($ref,$keyValue);
+                        if(!$check || ($check && !is_array($ref[$keyValue])))
                             $ref[$keyValue] = array();
                         $ref = &$ref[$keyValue];
                     }
@@ -471,11 +481,11 @@ class EasyArray implements IEasyArray{
                     break;
                 }
 
-                if(!isset($ref[$tKey]) && !@array_key_exists($tKey,$ref)){
+                if(isset($ref[$tKey]) || @array_key_exists($tKey,$ref)){
+                    $ref = $ref[$tKey];
+                }else{
                     $re = FALSE;
                     break;
-                }else{
-                    $ref = $ref[$tKey];
                 }
 
             }
@@ -494,9 +504,8 @@ class EasyArray implements IEasyArray{
 
     protected function _ksort(array $a):array{
 
-        $ab = $a;
-        ksort($ab);
-        return $ab;
+        ksort($a);
+        return $a;
 
     }
 

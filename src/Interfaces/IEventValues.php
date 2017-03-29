@@ -11,12 +11,16 @@ namespace Sicet7\EasyArray\Interfaces;
 
 interface IEventValues{
 
-    public function __construct(array $eventValues,int $event);
+    public function __construct(array $eventValues,int $eventType,int $eventPosition);
 
     public function getType():int;
+
+    public function getPosition():int;
 
     public function get(string $name);
 
     public function blockAction();
+
+    public function __call($name, $arguments);
 
 }

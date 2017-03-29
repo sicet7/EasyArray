@@ -274,6 +274,8 @@ class EasyArrayTest extends TestCase{
 
         $this->assertEquals('hello world!',$obj->get('test.data.functions.hello')('world!'));
 
+        $this->assertEquals('hello',$obj->get('test.object.two.dummy'));
+
     }
 
 
