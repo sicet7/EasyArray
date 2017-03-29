@@ -20,7 +20,6 @@ class EasyArray implements IEasyArray{
 
     #region Constants
 
-    const SERIALIZERPARAMS = 'SPARAMS';
     const ALLOWCHANGE = 'CHANGE';
     const ALLOWAPPEND = 'APPEND';
     const EVENTSENABLE = 'EVENTS';

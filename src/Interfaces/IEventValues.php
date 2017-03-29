@@ -11,7 +11,7 @@ namespace Sicet7\EasyArray\Interfaces;
 
 interface IEventValues{
 
-    public function __construct(array $eventValues,IEasyArray &$easyArray,int $event);
+    public function __construct(array $eventValues,int $event);
 
     public function getType():int;
 
