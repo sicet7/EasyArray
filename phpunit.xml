@@ -5,8 +5,8 @@
         backupStaticAttributes="false"
         colors="true"
         stopOnFailure="false"
-        bootstrap="vendor/autoload.php"
         verbose="true"
+        bootstrap="./vendor/autoload.php"
 >
     <testsuites>
         <testsuite name="UserSystem Test Suite">

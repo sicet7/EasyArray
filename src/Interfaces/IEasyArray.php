@@ -16,15 +16,20 @@ use \Serializable;
 use Zumba\JsonSerializer\JsonSerializer;
 
 
-interface EasyArrayInterface extends ArrayAccess, IteratorAggregate, Serializable {
+interface IEasyArray extends ArrayAccess, IteratorAggregate, Serializable {
 
     #region Constants
 
-    const GET_EVENT = 0;
-    const SET_EVENT = 1;
-    const ISSET_EVENT = 2;
-    const UNSET_EVENT = 3;
-    const CALL_EVENT = 4;
+    const BEFORE_GET_EVENT = 0;
+    const AFTER_GET_EVENT = 1;
+    const BEFORE_SET_EVENT = 2;
+    const AFTER_SET_EVENT = 3;
+    const BEFORE_ISSET_EVENT = 4;
+    const AFTER_ISSET_EVENT = 5;
+    const BEFORE_UNSET_EVENT = 6;
+    const AFTER_UNSET_EVENT = 7;
+    const BEFORE_CALL_EVENT = 8;
+    const AFTER_CALL_EVENT = 9;
 
     #endregion
 
@@ -32,15 +37,7 @@ interface EasyArrayInterface extends ArrayAccess, IteratorAggregate, Serializabl
 
     #region Magic Methods
 
-    public function __construct(array $values = [],bool $change = false);
-
-    public function __set(string $name,$value):bool;
-
-    public function __get(string $name);
-
-    public function __unset(string $name);
-
-    public function __isset(string $name):bool;
+    public function __construct(array $values = [],array $options = []);
 
     #endregion
 
@@ -58,13 +55,15 @@ interface EasyArrayInterface extends ArrayAccess, IteratorAggregate, Serializabl
 
     public function asArray():array;
 
-    public function toJson(bool $onlyValues = true):string;
+    public function addEvent(Closure $callback,int $type = IEasyArray::BEFORE_GET_EVENT, int $position = NULL);
 
-    public function addEvent(Closure $callback,int $type = EasyArrayInterface::GET_EVENT, int $position = null);
+    public function merge(array $array,bool $overwrite = FALSE);
 
-    public function merge(array $array,bool $overwrite = false);
+    public function getSerializer():ISerializer;
 
-    public function getSerializer():JsonSerializer;
+    public function sameAs(string $offset,$value):bool;
+    
+    public function count(string $offset = NULL):int;
 
     #endregion
 
