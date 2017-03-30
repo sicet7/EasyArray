@@ -63,15 +63,19 @@ class EasyArray implements IEasyArray{
 
     public function __construct(array $values = [],array $options = []){
 
+        //validates options
         $ope = $this->_validateOptions($options);
 
+        //sets options
         $this->_executeEvents           = $this->_options[EasyArray::EVENTSENABLE]  = $ope[EasyArray::EVENTSENABLE];
         $this->__serializerInstance     = $this->_options[EasyArray::SERIALIZER]    = $ope[EasyArray::SERIALIZER];
         $this->_change                  = $this->_options[EasyArray::ALLOWCHANGE]   = $ope[EasyArray::ALLOWCHANGE];
         $this->_append                  = $this->_options[EasyArray::ALLOWAPPEND]   = $ope[EasyArray::ALLOWAPPEND];
 
-
+        //unpacks values
         $this->_recursiveValueUnpacker($values);
+
+        //sets main values
         $this->_values = $values;
 
     }
@@ -81,11 +85,19 @@ class EasyArray implements IEasyArray{
     #region Serializable
 
     public function serialize(): string{
+        //returns the object serialized
         return $this->getSerializer()->serialize(['values' => $this->_values, 'change' => $this->_change, 'events' => $this->_events]);
     }
 
     public function unserialize($serialized):IEasyArray{
+
+        //universalizes passed data
         $un = $this->getSerializer()->unserialize($serialized);
+
+        if(!array_key_exists('values',$un) || !array_key_exists('change',$un) || !array_key_exists('events',$un))
+            throw new \InvalidArgumentException('Data invalid');
+
+        //binds the data to this object and then returns this object
         $this->_values = $un['values'];
         $this->_change = $un['change'];
         $this->_events = $un['events'];
@@ -102,41 +114,54 @@ class EasyArray implements IEasyArray{
 
         // TODO: Integrate Event Activation
 
+        //determines if the offset/key we are looking for might be nested based on dots
         if(strpos($offset,'.') !== FALSE){
-            $copy = $this->_values;//values stored in the array is copied
+
+            //copies main values array
+            $copy = $this->_values;
+
+            //splits keys into array based on dots
             $keys = explode('.',$offset);
 
+            //loops keys
             foreach($keys as $key){
 
+                //if key is a empty string return NULL
                 if($key == ''){
                     $copy = NULL;
                     break;
                 }
 
+                //if key pointed to a object
                 if(is_object($copy)){
 
+                    //reflects on object
                     $reflect = new \ReflectionObject($copy);
 
+                    //checks if has constant or property with the name of the key
                     if($reflect->hasConstant($key)){
                         $copy = $reflect->getConstant($key);
                     }elseif($reflect->hasProperty($key)){
                         $copy = $reflect->getProperty($key)->getValue($copy);
                     }else{
+                        //returns null if object does not have constant or property with the same name as the key we are looking for
                         $copy = NULL;
                         break;
                     }
 
                 }elseif(isset($copy[$key]) || @array_key_exists($key,$copy)){
 
+                    //changes array.
                     $copy = $copy[$key];
 
                 }else{
+                    //if key is not found return null
                     $copy = NULL;
                     break;
                 }
             }
 
-            // TODO : Implement a instance of the Child Class instead.
+            // return what ever is in the copy variable unless it is an array then it is converted to a new EastArray object
             return (is_array($copy) && !($copy instanceof EasyArray) ? new EasyArray($copy,$this->_options) : $copy);
         }else{
             return (is_array($this->_values[$offset]) && !($this->_values[$offset] instanceof EasyArray) ? new EasyArray($this->_values[$offset],$this->_options) : $this->_values[$offset]);
@@ -146,28 +171,43 @@ class EasyArray implements IEasyArray{
 
     public function set(string $offset, $value): bool{
 
+        //determines if change is allowed
         if(!$this->_change)
             throw new \BadMethodCallException("Data change has been disabled");
 
         // TODO: Integrate Event Activation
 
+        //determines if the offset/key we are looking for might be nested based on dots
         if(strpos($offset,'.') !== FALSE){
 
+            //separates keys on dots
             $keys = explode('.', $offset);
+
+            //counts the amount of keys
+            $keyCount = count($keys);
+
+            //sets reference to main value array
             $ref = &$this->_values;
 
+            //loops keys
             foreach($keys as $key => $keyValue){
 
-                $k = $key+1;
-
+                //if key is nothing, happens when there is a double dot or trailing dot, break;
                 if($keyValue == '')
                     break;
 
-                if(count($keys) == $k){
+                //determines if we are on the last key
+                if($keyCount === $key+1){
                     $ref[$keyValue] = $value;
                 }else{
-                    if(!$this->_check($ref,$keyValue) || ($this->_check($ref,$keyValue) && !is_array($ref[$keyValue])))
-                        $ref[$keyValue] = array();
+
+                    //checks if key is in array
+                    $check = $this->_check($ref,$keyValue);
+
+                    //if key is not found or if the keys value isn't an array, sets the value to an new array
+                    if(!$check || ($check && !is_array($ref[$keyValue]))) $ref[$keyValue] = array();
+
+                    //changes array into that array
                     $ref = &$ref[$keyValue];
                 }
 
@@ -175,6 +215,7 @@ class EasyArray implements IEasyArray{
 
         }else{
 
+            //sets value
             $this->_values[$offset] = $value;
 
         }
@@ -192,41 +233,64 @@ class EasyArray implements IEasyArray{
 
     public function remove(string $offset){
 
-
+        //determines if change is allowed
         if(!$this->_change)
             throw new \BadMethodCallException("Data change has been disabled");
 
         // TODO: Integrate Event Activation
 
+        //returns if key isn't found
+        if(!$this->_check($this->_values,$offset)) return;
+
+        //determines if the offset/key we are looking for might be nested based on dots
         if(strpos($offset,'.') !== FALSE){
+
+            //creates reference to values array
             $ref = &$this->_values;
+
+            //splits keys into chucks
             $keys = explode('.',$offset);
+
+            //get the last key
             $unsetElementKey = array_pop($keys);
 
+            //counts the remaining keys
+            $keyCount = count($keys);
+
+            //function main loop
             foreach($keys as $index => $keyValue){
 
-                $k = $index+1;
-
+                //makes sure the there is no key with no name
                 if($keyValue == '')
                     break;
 
-                if(isset($ref[$keyValue]) || @array_key_exists($keyValue,$ref)){
-                    if(count($keys) == $k){
-                        $ref = &$ref[$keyValue];
-                        unset($ref[$unsetElementKey]);
-                        break;
-                    }else{
-                        if(!$this->_check($ref,$keyValue) || ($this->_check($ref,$keyValue) && !is_array($ref[$keyValue])))
-                            $ref[$keyValue] = array();
-                        $ref = &$ref[$keyValue];
-                    }
-                }else{
+                //checks to see if key exists
+                $check = $this->_check($ref,$keyValue);
+
+                //checks if is last element (minus the element we popped off in the start)
+                if($keyCount === $index+1){
+
+                    //exit function if doesn't key exists
+                    if(!$check) break;
+
+                    //changes array into the last array
+                    $ref = &$ref[$keyValue];
+
+                    //removes value from array
+                    unset($ref[$unsetElementKey]);
                     break;
+                }else{
+
+                    //exit function if doesn't key exists
+                    if(!$check) break;
+
+                    $ref = &$ref[$keyValue];
                 }
 
             }
 
         }else{
+            //unsets value
             unset($this->_values[$offset]);
         }
 
@@ -315,8 +379,10 @@ class EasyArray implements IEasyArray{
         if(!$overwrite && !$this->_append)
             throw new \BadMethodCallException("Data append has been disabled");
 
+        //unpack the arrays values
         $this->_recursiveValueUnpacker($array);
 
+        //determines if it should overwrite or not
         if($overwrite){
             $this->_values = array_replace_recursive($this->_values,$array);
         }else{
@@ -535,20 +601,30 @@ class EasyArray implements IEasyArray{
     }
 
     protected function _check(array $ar,$key):bool{
+
+        //determines if the offset/key we are looking for might be nested based on dots
         if(strpos($key,'.') !== FALSE){
+
+            //splits the keys into an array by the dots
             $keys = explode('.',$key);
-            $ref = $ar;
+
+            //copies array to search through it
+            $copy = $ar;
+
+            //sets default return value
             $re = TRUE;
 
             foreach($keys as $tKey){
 
+                //if empty key then set return value to FALSE and break loop
                 if($tKey == ''){
                     $re = FALSE;
                     break;
                 }
 
-                if(isset($ref[$tKey]) || @array_key_exists($tKey,$ref)){
-                    $ref = $ref[$tKey];
+                //determines if key exists, if so then replace copied variable with the value else set return value to FALSE and break loop
+                if(isset($copy[$tKey]) || @array_key_exists($tKey,$copy)){
+                    $copy = $copy[$tKey];
                 }else{
                     $re = FALSE;
                     break;
@@ -556,9 +632,11 @@ class EasyArray implements IEasyArray{
 
             }
 
+            //return, return value
             return $re;
 
         }else{
+            //return TRUE or FALSE depending on if the key exists in the array
             return (isset($ar[$key]) || @array_key_exists($key,$ar));
         }
     }
