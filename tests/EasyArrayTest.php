@@ -76,7 +76,14 @@ class EasyArrayTest extends TestCase{
         'test.object.two' => $obj
         ],$this->conf);
     }
+    /**
+     * @test
+    */
+    public function unpacker_success(){
 
+        $this->assertFalse(array_key_exists('test.data.numbers.two',$this->easyarray->asArray()));
+
+    }
 
     /** @test */
     public function normal_get(){
