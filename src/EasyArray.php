@@ -20,31 +20,29 @@ class EasyArray implements IEasyArray{
 
     #region Constants
 
-    const ALLOWCHANGE = 'CHANGE';
-    const ALLOWAPPEND = 'APPEND';
-    const EVENTSENABLE = 'EVENTS';
-    const SERIALIZER = 'SERIALIZER';
+    const
+        ALLOWCHANGE   = 'CHANGE',
+        ALLOWAPPEND   = 'APPEND',
+        EVENTSENABLE  = 'EVENTS',
+        SERIALIZER    = 'SERIALIZER';
 
     #endregion
 
     #region Properties
 
-    #region Protected
 
-    protected $_values = array();
-    protected $_change = FALSE;
-    protected $_append = FALSE;
-    protected $_options = array();
-    protected $_events = array();
-    protected $_executeEvents = TRUE;
 
-    #endregion
+    protected
+        $_values  = array(),
+        $_change  = FALSE,
+        $_append  = FALSE,
+        $_options = array();
 
-    #region Private
 
-    private $__serializerInstance = NULL;
 
-    #endregion
+    private
+        $__serializerInstance = NULL;
+
 
     #endregion
 
@@ -56,7 +54,6 @@ class EasyArray implements IEasyArray{
         $ope = $this->_validateOptions($options);
 
         //sets options
-        $this->_executeEvents           = $this->_options[EasyArray::EVENTSENABLE]  = $ope[EasyArray::EVENTSENABLE];
         $this->__serializerInstance     = $this->_options[EasyArray::SERIALIZER]    = $ope[EasyArray::SERIALIZER];
         $this->_change                  = $this->_options[EasyArray::ALLOWCHANGE]   = $ope[EasyArray::ALLOWCHANGE];
         $this->_append                  = $this->_options[EasyArray::ALLOWAPPEND]   = $ope[EasyArray::ALLOWAPPEND];
@@ -75,7 +72,7 @@ class EasyArray implements IEasyArray{
 
     public function serialize(): string{
         //returns the object serialized
-        return $this->getSerializer()->serialize(['values' => $this->_values, 'change' => $this->_change, 'events' => $this->_events]);
+        return $this->getSerializer()->serialize(['values' => $this->_values, 'change' => $this->_change]);
     }
 
     public function unserialize($serialized):IEasyArray{
@@ -83,14 +80,14 @@ class EasyArray implements IEasyArray{
         //universalizes passed data
         $un = $this->getSerializer()->unserialize($serialized);
 
-        if(!array_key_exists('values',$un) || !array_key_exists('change',$un) || !array_key_exists('events',$un))
+        if(!array_key_exists('values',$un) || !array_key_exists('change',$un))
             throw new \InvalidArgumentException('Data invalid');
 
         //binds the data to this object and then returns this object
         $this->_values = $un['values'];
         $this->_change = $un['change'];
-        $this->_events = $un['events'];
         return $this;
+
     }
 
     #endregion
@@ -100,8 +97,6 @@ class EasyArray implements IEasyArray{
     #region Normal Methods
 
     public function get(string $offset){
-
-        // TODO: Integrate Event Activation
 
         //determines if the offset/key we are looking for might be nested based on dots
         if(strpos($offset,'.') !== FALSE){
@@ -162,7 +157,7 @@ class EasyArray implements IEasyArray{
 
         //determines if change is allowed
         if(!$this->_change)
-            throw new \BadMethodCallException("Data change has been disabled");
+            throw new \BadMethodCallException('Data change has been disabled');
 
         // TODO: Integrate Event Activation
 
@@ -224,7 +219,7 @@ class EasyArray implements IEasyArray{
 
         //determines if change is allowed
         if(!$this->_change)
-            throw new \BadMethodCallException("Data change has been disabled");
+            throw new \BadMethodCallException('Data change has been disabled');
 
         // TODO: Integrate Event Activation
 
@@ -315,7 +310,7 @@ class EasyArray implements IEasyArray{
 
         //check if append is enabled
         if(!$this->_append)
-            throw new \BadMethodCallException("Data append has been disabled");
+            throw new \BadMethodCallException('Data append has been disabled');
 
         //unpack the array
         $a = [$offset => $value];
@@ -324,12 +319,6 @@ class EasyArray implements IEasyArray{
 
         //marge unacpked array with current values in $this->_values
         $this->_values = array_merge_recursive($this->_values,$a);
-
-        //store event execution state
-        $default = $this->_executeEvents;
-
-        //disable events
-        $this->_executeEvents = FALSE;
 
         //get the offset from the array
         $obj = $this->get($offset);
@@ -341,9 +330,6 @@ class EasyArray implements IEasyArray{
         }else{
             $returnValue = ($obj === $value);
         }
-
-        //revert event execution state
-        $this->_executeEvents = $default;
 
         //return boolean that tells if it was added successfully
         return $returnValue;
@@ -358,11 +344,11 @@ class EasyArray implements IEasyArray{
 
         //check if change is allowed
         if($overwrite && !$this->_change)
-            throw new \BadMethodCallException("Data change has been disabled");
+            throw new \BadMethodCallException('Data change has been disabled');
 
         //check if append is allowed
         if(!$overwrite && !$this->_append)
-            throw new \BadMethodCallException("Data append has been disabled");
+            throw new \BadMethodCallException('Data append has been disabled');
 
         //unpack the arrays values
         $this->_recursiveValueUnpacker($array);
@@ -382,17 +368,8 @@ class EasyArray implements IEasyArray{
 
     public function sameAs(string $offset, $value):bool{
 
-        //store event execution state
-        $default = $this->_executeEvents;
-
-        //disable events
-        $this->_executeEvents = FALSE;
-
         //get the information
         $obj = $this->get($offset);
-
-        //restore event state to default after we got out information
-        $this->_executeEvents = $default;
 
         //convert EasyArray's to array if both variables are not EasyArrays
         if(($obj instanceof IEasyArray) && !($value instanceof IEasyArray)) $obj = $obj->asArray();
@@ -506,20 +483,11 @@ class EasyArray implements IEasyArray{
             return count($this->_values);
         }
 
-        //store event execution state
-        $default = $this->_executeEvents;
-
-        //disable event execution
-        $this->_executeEvents = FALSE;
-
         //get the value that is being counted
         $obj = $this->get($offset);
 
         //count the value and if EasyArray is returned convert it to an array. Potential Exception thrown here if a not countable is returned by the get operation.
         $returnValue = count(($obj instanceof IEasyArray) ? $obj->asArray() : $obj);
-
-        //set event execution state back
-        $this->_executeEvents = $default;
 
         //return count
         return $returnValue;
@@ -626,28 +594,49 @@ class EasyArray implements IEasyArray{
         }
     }
 
+    protected function _runEvents(int $type):bool{
+
+
+    }
+
     protected function _validateOptions(array $options):array{
 
+        //checks if the SERIALIZER value is set in the options array, if not sets a default SERIALIZER
         if(array_key_exists(EasyArray::SERIALIZER,$options)){
+
+            //checks if the set SERIALIZER value is valid
             if(!($options[EasyArray::SERIALIZER] instanceof ISerializer)) throw new \InvalidArgumentException('Serializer must implement "Sicet7\\EasyArray\\Interfaces\\ISerializer"');
+
         }else{
             $options[EasyArray::SERIALIZER] = new JsonS(new Serializer(new TokenAnalyzer()));
         }
 
+        //checks if the ALLOWCHANGE value is set in the options array, if not sets a default BOOLEAN
         if(array_key_exists(EasyArray::ALLOWCHANGE,$options)){
+
+            //checks if the set ALLOWCHANGE value is valid
             if(!is_bool($options[EasyArray::ALLOWCHANGE])) throw new \InvalidArgumentException('Change must be a boolean value!');
+
         }else{
             $options[EasyArray::ALLOWCHANGE] = FALSE;
         }
 
+        //checks if the ALLOWAPPEND value is set in the options array, if not sets a default BOOLEAN
         if(array_key_exists(EasyArray::ALLOWAPPEND,$options)){
+
+            //checks if the set ALLOWAPPEND value is valid
             if(!is_bool($options[EasyArray::ALLOWAPPEND])) throw new \InvalidArgumentException('Append must be a boolean value!');
+
         }else{
             $options[EasyArray::ALLOWAPPEND] = $options[EasyArray::ALLOWCHANGE];
         }
 
+        //checks if the EVENTSENABLE value is set in the options array, if not sets a default BOOLEAN
         if(array_key_exists(EasyArray::EVENTSENABLE,$options)){
+
+            //checks if the set EVENTSENABLE value is valid
             if(!is_bool($options[EasyArray::EVENTSENABLE])) throw new \InvalidArgumentException('Events must be a boolean value!');
+
         }else{
             $options[EasyArray::EVENTSENABLE] = FALSE;
         }
