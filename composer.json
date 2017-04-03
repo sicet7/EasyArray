@@ -4,7 +4,7 @@
   "description": "A array wrapper class that makes if easier to use arrays and makes is fully serializable even with closures in the array.",
   "minimum-stability": "stable",
   "license": "MIT",
-  "version": "0.1",
+  "version": "1.0-beta",
   "authors": [
     {
       "name": "Martin René Sørensen",
