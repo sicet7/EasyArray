@@ -8,7 +8,6 @@
 
 namespace Sicet7\EasyArray;
 
-use \Closure;
 use \ArrayIterator;
 use Sicet7\EasyArray\Interfaces\ISerializer;
 use SuperClosure\Analyzer\TokenAnalyzer;
@@ -158,8 +157,6 @@ class EasyArray implements IEasyArray{
         if(!$this->_change)
             throw new \BadMethodCallException('Data change has been disabled');
 
-        // TODO: Integrate Event Activation
-
         //determines if the offset/key we are looking for might be nested based on dots
         if(strpos($offset,'.') !== FALSE){
 
@@ -208,9 +205,6 @@ class EasyArray implements IEasyArray{
     }
 
     public function exists(string $offset): bool{
-
-        // TODO: Integrate Event Activation
-
         return $this->_check($this->_values,$offset);
     }
 
@@ -219,8 +213,6 @@ class EasyArray implements IEasyArray{
         //determines if change is allowed
         if(!$this->_change)
             throw new \BadMethodCallException('Data change has been disabled');
-
-        // TODO: Integrate Event Activation
 
         //returns if key isn't found
         if(!$this->_check($this->_values,$offset)) return;
@@ -591,11 +583,6 @@ class EasyArray implements IEasyArray{
             //return TRUE or FALSE depending on if the key exists in the array
             return (isset($ar[$key]) || @array_key_exists($key,$ar));
         }
-    }
-
-    protected function _runEvents(int $type):bool{
-
-
     }
 
     protected function _validateOptions(array $options):array{
