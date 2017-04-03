@@ -35,18 +35,7 @@ class EasyArray implements IEasyArray{
     protected $_change = FALSE;
     protected $_append = FALSE;
     protected $_options = array();
-    protected $_events = array(
-        IEasyArray::BEFORE_GET_EVENT => array(),
-        IEasyArray::AFTER_GET_EVENT => array(),
-        IEasyArray::BEFORE_SET_EVENT => array(),
-        IEasyArray::AFTER_SET_EVENT => array(),
-        IEasyArray::BEFORE_ISSET_EVENT => array(),
-        IEasyArray::AFTER_ISSET_EVENT => array(),
-        IEasyArray::BEFORE_UNSET_EVENT => array(),
-        IEasyArray::AFTER_UNSET_EVENT => array(),
-        IEasyArray::BEFORE_CALL_EVENT => array(),
-        IEasyArray::AFTER_CALL_EVENT => array()
-    );
+    protected $_events = array();
     protected $_executeEvents = TRUE;
 
     #endregion
@@ -321,10 +310,6 @@ class EasyArray implements IEasyArray{
     #endregion
 
     #region Methods
-
-    public function addEvent(Closure $callback, int $type = IEasyArray::BEFORE_GET_EVENT,int $position = NULL){
-        // TODO: Implement addEvent() method.
-    }
 
     public function add(string $offset, $value): bool{
 
@@ -639,11 +624,6 @@ class EasyArray implements IEasyArray{
             //return TRUE or FALSE depending on if the key exists in the array
             return (isset($ar[$key]) || @array_key_exists($key,$ar));
         }
-    }
-
-    protected function _runEvents(int $type):bool{
-        // TODO: Implementation method.
-        // TODO: Implement _runEvents();
     }
 
     protected function _validateOptions(array $options):array{

@@ -18,21 +18,6 @@ use Zumba\JsonSerializer\JsonSerializer;
 
 interface IEasyArray extends ArrayAccess, IteratorAggregate, Serializable {
 
-    #region Constants
-
-    const BEFORE_GET_EVENT = 0;
-    const AFTER_GET_EVENT = 1;
-    const BEFORE_SET_EVENT = 2;
-    const AFTER_SET_EVENT = 3;
-    const BEFORE_ISSET_EVENT = 4;
-    const AFTER_ISSET_EVENT = 5;
-    const BEFORE_UNSET_EVENT = 6;
-    const AFTER_UNSET_EVENT = 7;
-    const BEFORE_CALL_EVENT = 8;
-    const AFTER_CALL_EVENT = 9;
-
-    #endregion
-
     #region Public
 
     #region Magic Methods
@@ -54,9 +39,7 @@ interface IEasyArray extends ArrayAccess, IteratorAggregate, Serializable {
     public function exists(string $offset):bool;
 
     public function asArray():array;
-
-    public function addEvent(Closure $callback,int $type = IEasyArray::BEFORE_GET_EVENT, int $position = NULL);
-
+    
     public function merge(array $array,bool $overwrite = FALSE);
 
     public function getSerializer():ISerializer;
