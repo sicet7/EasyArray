@@ -38,8 +38,7 @@ class EasyArrayTest extends TestCase{
                 (new Serializer(
                     new TokenAnalyzer()
                 ))
-            ),
-            EA::EVENTSENABLE => TRUE
+            )
         ];
 
         $this->easyarray = new EA([
