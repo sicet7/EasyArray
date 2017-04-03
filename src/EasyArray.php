@@ -23,7 +23,6 @@ class EasyArray implements IEasyArray{
     const
         ALLOWCHANGE   = 'CHANGE',
         ALLOWAPPEND   = 'APPEND',
-        EVENTSENABLE  = 'EVENTS',
         SERIALIZER    = 'SERIALIZER';
 
     #endregion
@@ -629,16 +628,6 @@ class EasyArray implements IEasyArray{
 
         }else{
             $options[EasyArray::ALLOWAPPEND] = $options[EasyArray::ALLOWCHANGE];
-        }
-
-        //checks if the EVENTSENABLE value is set in the options array, if not sets a default BOOLEAN
-        if(array_key_exists(EasyArray::EVENTSENABLE,$options)){
-
-            //checks if the set EVENTSENABLE value is valid
-            if(!is_bool($options[EasyArray::EVENTSENABLE])) throw new \InvalidArgumentException('Events must be a boolean value!');
-
-        }else{
-            $options[EasyArray::EVENTSENABLE] = FALSE;
         }
 
         return $options;
